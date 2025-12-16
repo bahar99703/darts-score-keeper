@@ -158,21 +158,29 @@ function nextPlayer() {
 }
 function endLeg(winner) {
     winner.legsWon++;
+    // Update display before showing alert
+    renderState();
     if (hasWonSet(winner)) {
         declareWinner(winner);
     }
     else {
-        resetLegScores();
+        // Show leg win message
+        setTimeout(() => {
+            alert(`🎯 ${winner.name} wins Leg ${currentLeg}!\n\nLegs Won: ${winner.legsWon}\n\nStarting Leg ${currentLeg + 1}...`);
+            resetLegScores();
+        }, 100);
     }
 }
 function resetLegScores() {
+    // Increment leg counter FIRST
+    currentLeg++;
+    // Reset all player scores and history
     players.forEach(player => {
         player.score = startScore;
         player.turnHistory = [];
     });
     legTurnHistory = [];
     globalTurnNumber = 0;
-    currentLeg++;
     currentPlayerIndex = 0; // could alternate starter if desired
     renderState();
 }
@@ -219,13 +227,42 @@ function renderState() {
       </tbody>
     </table>
   ` : '';
+    const legsNeededToWin = Math.ceil(maxLegs / 2);
+    const setStatusTable = `
+    <div class="set-status">
+      <h3>Set Status (Best of ${maxLegs})</h3>
+      <table class="set-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Legs Won</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${players.map(player => `
+            <tr class="${player.legsWon >= legsNeededToWin ? 'winner' : ''}">
+              <td><strong>${player.name}</strong></td>
+              <td>${player.legsWon} / ${legsNeededToWin}</td>
+              <td>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${(player.legsWon / legsNeededToWin) * 100}%"></div>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
     gameDiv.innerHTML = `
-    <h2>Leg ${currentLeg}</h2>
+    ${setStatusTable}
+    <h2>Leg ${currentLeg} - Current Scores</h2>
     <ul>
       ${players
         .map((player, index) => `
             <li>
-              <strong>${player.name}</strong> — Score: ${player.score}, Legs Won: ${player.legsWon}
+              <strong>${player.name}</strong> — Score: ${player.score}
               ${index === currentPlayerIndex && !gameOver ? " ← current" : ""}
             </li>
           `)

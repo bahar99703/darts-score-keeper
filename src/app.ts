@@ -199,18 +199,28 @@ function nextPlayer(): void {
 currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
 }
 function endLeg(winner: Player): void {
-winner.legsWon++;
-
-
-if (hasWonSet(winner)) {
-declareWinner(winner);
-} else {
-resetLegScores();
-}
+  winner.legsWon++;
+  
+  // Update display before showing alert
+  renderState();
+  
+  if (hasWonSet(winner)) {
+    declareWinner(winner);
+  } else {
+    // Show leg win message
+    setTimeout(() => {
+      alert(`🎯 ${winner.name} wins Leg ${currentLeg}!\n\nLegs Won: ${winner.legsWon}\n\nStarting Leg ${currentLeg + 1}...`);
+      resetLegScores();
+    }, 100);
+  }
 }
 
 
 function resetLegScores(): void {
+  // Increment leg counter FIRST
+  currentLeg++;
+  
+  // Reset all player scores and history
   players.forEach(player => {
     player.score = startScore;
     player.turnHistory = [];
@@ -218,7 +228,6 @@ function resetLegScores(): void {
 
   legTurnHistory = [];
   globalTurnNumber = 0;
-  currentLeg++;
   currentPlayerIndex = 0; // could alternate starter if desired
 
   renderState();
