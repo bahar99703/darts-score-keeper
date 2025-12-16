@@ -6,7 +6,7 @@ yarn-error.log*
 .lock-wscript
 
 # Dist / build output
-dist/
+# dist/ - Commented out for GitHub Pages deployment
 build/
 
 # Env
