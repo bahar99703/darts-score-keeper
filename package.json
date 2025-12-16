@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "npx live-server --port=8080 --open=source.html",
     "start": "npm run build && npx http-server ./dist -p 8080",
-    "lint": "eslint 'src/**/*.{ts,js}' --ext .ts",
+    "lint": "eslint \"src/**/*.{ts,js}\" --ext .ts",
     "format": "prettier --write \"src/**/*.{ts,js,json,md,css,html}\""
   },
   "engines": {
