@@ -228,12 +228,16 @@ function nextPlayer() {
 }
 function endLeg(winner) {
     winner.legsWon++;
-    // Update display before showing alert
-    renderState();
     if (hasWonSet(winner)) {
-        declareWinner(winner);
+        // Update display to show final legs won
+        renderState();
+        setTimeout(() => {
+            declareWinner(winner);
+        }, 100);
     }
     else {
+        // Update display to show legs won before moving to next leg
+        renderState();
         // Show leg win message
         setTimeout(() => {
             alert(`🎯 ${winner.name} wins Leg ${currentLeg}!\n\nLegs Won: ${winner.legsWon}\n\nStarting Leg ${currentLeg + 1}...`);
