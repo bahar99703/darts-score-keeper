@@ -157,13 +157,13 @@ function recalculateScores(): void {
   
   let winningPlayer: Player | null = null;
   
-  // Replay all turns
+ 
   for (const turn of legTurnHistory) {
     const player = players.find(p => p.id === turn.playerId);
     if (!player) continue;
     
     const newScore = player.score - turn.pointsScored;
-    
+    console.log(player.score, turn.pointsScored, newScore)
     if (newScore < 0) {
       // Bust - score goes below zero
       turn.isBust = true;
@@ -220,7 +220,7 @@ function resetLegScores(): void {
   // Increment leg counter FIRST
   currentLeg++;
   
-  // Reset all player scores and history
+
   players.forEach(player => {
     player.score = startScore;
     player.turnHistory = [];
@@ -228,7 +228,7 @@ function resetLegScores(): void {
 
   legTurnHistory = [];
   globalTurnNumber = 0;
-  currentPlayerIndex = 0; // could alternate starter if desired
+  currentPlayerIndex = 0; 
 
   renderState();
 }
