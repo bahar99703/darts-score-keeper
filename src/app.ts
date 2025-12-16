@@ -6,12 +6,6 @@ enum GameType {
   GAME_501 = 501
 }
 
-enum TurnStatus {
-  VALID = "valid",
-  BUST = "bust",
-  WIN = "win"
-}
-
 // ============================================
 // INTERFACES & TYPES
 // ============================================
@@ -39,9 +33,6 @@ interface GameConfig {
   maxLegs: number;
   playerNames: string[];
 }
-
-// Generic utility type for event handlers
-type EventHandler<T> = (data: T) => void;
 
 // ============================================
 // GAME STATE MANAGEMENT MODULE

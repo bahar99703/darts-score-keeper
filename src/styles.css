@@ -9,8 +9,8 @@
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #1a2332;
-  color: #ffffff;
+  background: #284668;
+  color: #e5e7eb;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -22,7 +22,7 @@ body {
 #game {
   width: 100%;
   max-width: 640px;
-  background: #1a2332;
+  background: #284668;
   border-radius: 0.75rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   padding: 1.5rem;
@@ -34,7 +34,7 @@ h1 {
   max-width: 640px;
   margin: 0 auto 1rem auto;
   text-align: center;
-  color: #ffd166;
+  color: #eedeb7;
   font-weight: 600;
 }
 
@@ -45,7 +45,7 @@ h1 {
 }
 
 .setup-screen h2 {
-  color: #ffd166;
+  color: #eedeb7;
   margin-bottom: 2rem;
   font-size: 2rem;
 }
@@ -63,7 +63,7 @@ h1 {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #ffd166;
+  color: #eedeb7;
   font-weight: 600;
 }
 
@@ -71,18 +71,18 @@ h1 {
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #3d5a80;
+  border: 2px solid #1e3a52;
   border-radius: 0.375rem;
-  background: #2c3e50;
-  color: #ffffff;
+  background: #152436;
+  color: #e5e7eb;
   font-size: 1rem;
 }
 
 .form-group input:focus,
 .form-group select:focus {
-  outline: 3px solid #ffd166;
+  outline: 3px solid #fbbf24;
   outline-offset: 2px;
-  border-color: #ffd166;
+  border-color: #fbbf24;
 }
 
 .btn-start {
@@ -90,8 +90,8 @@ h1 {
   padding: 1rem;
   font-size: 1.1rem;
   font-weight: 600;
-  background: #06d6a0;
-  color: #000000;
+  background: #10b981;
+  color: white;
   cursor: pointer;
   border: none;
   border-radius: 0.5rem;
@@ -100,11 +100,11 @@ h1 {
 
 .btn-start:hover,
 .btn-start:focus {
-  background: #05b385;
+  background: #059669;
 }
 
 .btn-start:focus {
-  outline: 3px solid #ffd166;
+  outline: 3px solid #fbbf24;
   outline-offset: 2px;
 }
 
@@ -118,7 +118,7 @@ li {
   padding: 0.5rem 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 0.5rem;
-  background: #2c3e50;
+  background: #152436;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -130,17 +130,17 @@ button {
   border-radius: 0.375rem;
   padding: 0.4rem 0.9rem;
   font-size: 0.9rem;
-  background: #118ab2;
-  color: #ffffff;
+  background: #2563eb;
+  color: #e5e7eb;
 }
 
 button:hover,
 button:focus {
-  background: #0d6d8f;
+  background: #1d4ed8;
 }
 
 button:focus {
-  outline: 3px solid #ffd166;
+  outline: 3px solid #fbbf24;
   outline-offset: 2px;
 }
 
@@ -157,18 +157,18 @@ button:disabled {
 }
 
 .btn-reset {
-  background: #ffd166;
+  background: #f59e0b;
   color: #000000;
   font-weight: 600;
 }
 
 .btn-reset:hover,
 .btn-reset:focus {
-  background: #ffbe33;
+  background: #d97706;
 }
 
 .btn-reset:focus {
-  outline: 3px solid #ffd166;
+  outline: 3px solid #fbbf24;
   outline-offset: 2px;
 }
 
@@ -181,7 +181,7 @@ li span {
 h3 {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #ffd166;
+  color: #fbbf24;
   font-size: 1.1rem;
 }
 
@@ -189,36 +189,35 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 0.5rem;
-  background: #2c3e50;
+  background: #1f2937;
   border-radius: 0.5rem;
   overflow: hidden;
 }
 
 thead {
-  background: #3d5a80;
+  background: #374151;
 }
 
 th {
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
-  color: #ffd166;
+  color: #fbbf24;
   font-size: 0.9rem;
 }
 
 td {
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid #3d5a80;
-  color: #ffffff;
+  border-top: 1px solid #374151;
 }
 
 tr.bust {
-  background: #c1121f;
-  color: #ffffff;
+  background: #7f1d1d;
+  color: #fca5a5;
 }
 
 tbody tr:hover:not(.bust) {
-  background: #3d5a80;
+  background: #2d3748;
 }
 
 td.actions {
@@ -245,33 +244,33 @@ td.actions {
 .set-status {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background: #3d5a80;
+  background: #1e3a52;
   border-radius: 0.5rem;
-  border: 2px solid #ffd166;
+  border: 2px solid #fbbf24;
 }
 
 .set-status h3 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #ffd166;
+  color: #eedeb7;
   text-align: center;
 }
 
 .set-table {
-  background: #2c3e50;
+  background: #152436;
 }
 
 .set-table thead {
-  background: #3d5a80;
+  background: #1e3a52;
 }
 
 .set-table th {
-  color: #ffd166;
+  color: #eedeb7;
 }
 
 .set-table tr.winner {
-  background: #06d6a0;
-  color: #000000;
+  background: #065f46;
+  color: #6ee7b7;
 }
 
 .set-table tr.winner td {
@@ -281,19 +280,19 @@ td.actions {
 .progress-bar {
   width: 100%;
   height: 20px;
-  background: #2c3e50;
+  background: #374151;
   border-radius: 10px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #06d6a0, #26f5c5);
+  background: linear-gradient(90deg, #10b981, #34d399);
   transition: width 0.3s ease;
 }
 
 h2 {
-  color: #ffd166;
+  color: #eedeb7;
   margin-bottom: 0.5rem;
 }
 
