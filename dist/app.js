@@ -8,6 +8,63 @@ let currentLeg = 1;
 let gameOver = false;
 let legTurnHistory = [];
 let globalTurnNumber = 0;
+// Function to show the setup screen
+function showSetup() {
+    const gameDiv = document.getElementById("game");
+    if (!gameDiv)
+        return;
+    gameDiv.innerHTML = `
+    <div class="setup-screen">
+      <h2>Game Setup</h2>
+      <form id="setupForm" class="setup-form">
+        <div class="form-group">
+          <label for="player1">Player 1 Name:</label>
+          <input type="text" id="player1" value="Player 1" required />
+        </div>
+        
+        <div class="form-group">
+          <label for="player2">Player 2 Name:</label>
+          <input type="text" id="player2" value="Player 2" required />
+        </div>
+        
+        <div class="form-group">
+          <label for="gameType">Game Type:</label>
+          <select id="gameType" required>
+            <option value="501">501</option>
+            <option value="301">301</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="setSize">Set Size (Best of):</label>
+          <select id="setSize" required>
+            <option value="1">1 Leg</option>
+            <option value="3">3 Legs</option>
+            <option value="5" selected>5 Legs</option>
+            <option value="7">7 Legs</option>
+            <option value="9">9 Legs</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn-start">Start Game</button>
+      </form>
+    </div>
+  `;
+    const form = document.getElementById("setupForm");
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const player1 = document.getElementById("player1").value.trim();
+        const player2 = document.getElementById("player2").value.trim();
+        const gameType = parseInt(document.getElementById("gameType").value);
+        const setSize = parseInt(document.getElementById("setSize").value);
+        if (!player1 || !player2) {
+            alert("Please enter names for both players");
+            return;
+        }
+        startGame([player1, player2], gameType, setSize);
+    });
+}
+window.showSetup = showSetup;
 // Function to start a new game
 function startGame(playerNames, startingScore, legsToWin) {
     startScore = startingScore;
@@ -56,7 +113,6 @@ function recordTurn(points) {
     player.turns++;
     if (newScore === 0) {
         // Player reached exactly zero - they win this leg!
-        alert(`🎯 ${player.name} reached exactly zero and wins Leg ${currentLeg}!`);
         endLeg(player);
         return;
     }
@@ -116,12 +172,12 @@ function recalculateScores() {
         player.turns = 0;
     });
     let winningPlayer = null;
-    // Replay all turns
     for (const turn of legTurnHistory) {
         const player = players.find(p => p.id === turn.playerId);
         if (!player)
             continue;
         const newScore = player.score - turn.pointsScored;
+        console.log(player.score, turn.pointsScored, newScore);
         if (newScore < 0) {
             // Bust - score goes below zero
             turn.isBust = true;
@@ -174,14 +230,13 @@ function endLeg(winner) {
 function resetLegScores() {
     // Increment leg counter FIRST
     currentLeg++;
-    // Reset all player scores and history
     players.forEach(player => {
         player.score = startScore;
         player.turnHistory = [];
     });
     legTurnHistory = [];
     globalTurnNumber = 0;
-    currentPlayerIndex = 0; // could alternate starter if desired
+    currentPlayerIndex = 0;
     renderState();
 }
 function hasWonSet(player) {
@@ -274,5 +329,6 @@ function renderState() {
     ${turnHistoryTable}
   `;
 }
-startGame(["Player 1", "Player 2"], 501, 5);
+// Show setup screen on page load
+showSetup();
 //# sourceMappingURL=app.js.map

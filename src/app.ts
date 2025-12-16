@@ -27,6 +27,68 @@ let gameOver: boolean = false;
 let legTurnHistory: Turn[] = [];
 let globalTurnNumber: number = 0;
 
+// Function to show the setup screen
+function showSetup(): void {
+  const gameDiv = document.getElementById("game");
+  if (!gameDiv) return;
+
+  gameDiv.innerHTML = `
+    <div class="setup-screen">
+      <h2>Game Setup</h2>
+      <form id="setupForm" class="setup-form">
+        <div class="form-group">
+          <label for="player1">Player 1 Name:</label>
+          <input type="text" id="player1" value="Player 1" required />
+        </div>
+        
+        <div class="form-group">
+          <label for="player2">Player 2 Name:</label>
+          <input type="text" id="player2" value="Player 2" required />
+        </div>
+        
+        <div class="form-group">
+          <label for="gameType">Game Type:</label>
+          <select id="gameType" required>
+            <option value="501">501</option>
+            <option value="301">301</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="setSize">Set Size (Best of):</label>
+          <select id="setSize" required>
+            <option value="1">1 Leg</option>
+            <option value="3">3 Legs</option>
+            <option value="5" selected>5 Legs</option>
+            <option value="7">7 Legs</option>
+            <option value="9">9 Legs</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn-start">Start Game</button>
+      </form>
+    </div>
+  `;
+
+  const form = document.getElementById("setupForm") as HTMLFormElement;
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    
+    const player1 = (document.getElementById("player1") as HTMLInputElement).value.trim();
+    const player2 = (document.getElementById("player2") as HTMLInputElement).value.trim();
+    const gameType = parseInt((document.getElementById("gameType") as HTMLSelectElement).value) as 301 | 501;
+    const setSize = parseInt((document.getElementById("setSize") as HTMLSelectElement).value);
+    
+    if (!player1 || !player2) {
+      alert("Please enter names for both players");
+      return;
+    }
+    
+    startGame([player1, player2], gameType, setSize);
+  });
+}
+(window as any).showSetup = showSetup;
+
 // Function to start a new game
 function startGame(
   playerNames: string[],
@@ -87,7 +149,6 @@ function recordTurn(points: number): void {
 
   if (newScore === 0) {
     // Player reached exactly zero - they win this leg!
-    alert(`🎯 ${player.name} reached exactly zero and wins Leg ${currentLeg}!`);
     endLeg(player);
     return;
   }
@@ -329,4 +390,6 @@ function renderState(): void {
     ${turnHistoryTable}
   `;
 }
-startGame(["Player 1", "Player 2"], 501, 5);
+
+// Show setup screen on page load
+showSetup();
