@@ -9,7 +9,7 @@
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #254218;
+  background: #284668;
   color: #e5e7eb;
   min-height: 100vh;
   display: flex;
@@ -22,7 +22,7 @@ body {
 #game {
   width: 100%;
   max-width: 640px;
-  background: #254218;
+  background: #284668;
   border-radius: 0.75rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   padding: 1.5rem;
@@ -48,7 +48,7 @@ li {
   padding: 0.5rem 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 0.5rem;
-  background: #254218;
+  background: #152436;
   display: flex;
   justify-content: space-between;
   align-items: center;
