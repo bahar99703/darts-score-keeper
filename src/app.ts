@@ -3,7 +3,10 @@ interface Player {
   name: string;
   score: number;
   legsWon: number;
+  totalPoints: number;
+  turns: number;
 }
+
 // Game state varaibles 
 let players: Player[] = [];
 let currentPlayerIndex: number = 0;
@@ -14,27 +17,28 @@ let gameOver: boolean = false;
 
 // Function to start a new game
 function startGame(
-playerNames: string[],
-selectedStartScore: 301 | 501,
-selectedMaxLegs: number
+  playerNames: string[],
+  startingScore: 301 | 501,
+  legsToWin: number
 ): void {
-startScore = selectedStartScore;
-maxLegs = selectedMaxLegs;
-currentLeg = 1;
-currentPlayerIndex = 0;
-gameOver = false;
+  startScore = startingScore;
+  maxLegs = legsToWin;
+  currentLeg = 1;
+  currentPlayerIndex = 0;
+  gameOver = false;
 
+  players = playerNames.map((name, index) => ({
+    id: index,
+    name,
+    score: startScore,
+    legsWon: 0,
+    totalPoints: 0,
+    turns: 0
+  }));
 
-players = playerNames.map((name, index) => ({
-id: index,
-name,
-score: startScore,
-legsWon: 0
-}));
-
-
-renderState();
+  renderState();
 }
+
 // Function to record a player's turn
 function recordTurn(points: number): void {
 if (gameOver) return;
