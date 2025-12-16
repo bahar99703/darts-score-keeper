@@ -88,7 +88,7 @@ function showSetup(): void {
     startGame([player1, player2], gameType, setSize);
   });
 }
-(window as any).showSetup = showSetup;
+(window as Window & typeof globalThis).showSetup = showSetup;
 
 // Function to start a new game
 function startGame(
