@@ -80,7 +80,8 @@ h1 {
 
 .form-group input:focus,
 .form-group select:focus {
-  outline: none;
+  outline: 3px solid #fbbf24;
+  outline-offset: 2px;
   border-color: #fbbf24;
 }
 
@@ -97,8 +98,14 @@ h1 {
   margin-top: 1rem;
 }
 
-.btn-start:hover {
+.btn-start:hover,
+.btn-start:focus {
   background: #059669;
+}
+
+.btn-start:focus {
+  outline: 3px solid #fbbf24;
+  outline-offset: 2px;
 }
 
 /* Generic list + buttons used by renderState() */
@@ -127,8 +134,14 @@ button {
   color: #e5e7eb;
 }
 
-button:hover {
+button:hover,
+button:focus {
   background: #1d4ed8;
+}
+
+button:focus {
+  outline: 3px solid #fbbf24;
+  outline-offset: 2px;
 }
 
 button:disabled {
@@ -145,12 +158,18 @@ button:disabled {
 
 .btn-reset {
   background: #f59e0b;
-  color: #1f2937;
+  color: #000000;
   font-weight: 600;
 }
 
-.btn-reset:hover {
+.btn-reset:hover,
+.btn-reset:focus {
   background: #d97706;
+}
+
+.btn-reset:focus {
+  outline: 3px solid #fbbf24;
+  outline-offset: 2px;
 }
 
 /* Small text hint for current player */
