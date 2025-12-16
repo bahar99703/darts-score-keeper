@@ -171,7 +171,7 @@ function recordTurn(points: number): void {
   nextPlayer();
   renderState();
 }
-(window as any).recordTurn = recordTurn;
+(window as Window & typeof globalThis).recordTurn = recordTurn;
 
 // Function to remove a turn from history
 function removeTurn(turnNumber: number): void {
@@ -198,7 +198,7 @@ function removeTurn(turnNumber: number): void {
   recalculateScores();
   renderState();
 }
-(window as any).removeTurn = removeTurn;
+(window as Window & typeof globalThis).removeTurn = removeTurn;
 
 // Function to modify a turn's points
 function modifyTurn(turnNumber: number): void {
@@ -220,7 +220,7 @@ function modifyTurn(turnNumber: number): void {
   recalculateScores();
   renderState();
 }
-(window as any).modifyTurn = modifyTurn;
+(window as Window & typeof globalThis).modifyTurn = modifyTurn;
 
 // Function to recalculate all player scores based on turn history
 function recalculateScores(): void {
