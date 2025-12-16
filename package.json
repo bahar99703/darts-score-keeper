@@ -1,5 +1,28 @@
 {
+  "name": "darts-score-keeper",
+  "version": "0.1.0",
+  "description": "Browser-based darts score tracking app (TypeScript)",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "npx live-server --port=8080 --open=source.html",
+    "start": "npm run build && npx http-server ./dist -p 8080",
+    "lint": "eslint \"src/**/*.{ts,js}\" --ext .ts",
+    "format": "prettier --write \"src/**/*.{ts,js,json,md,css,html}\""
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "author": "",
+  "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "eslint": "^8.50.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "prettier": "^2.8.8",
+    "eslint-config-prettier": "^9.0.0",
+    "live-server": "^1.2.2",
+    "http-server": "^14.1.1"
   }
 }
