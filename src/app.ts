@@ -1,3 +1,20 @@
+// ============================================
+// ENUMS - Advanced TypeScript Feature
+// ============================================
+enum GameType {
+  GAME_301 = 301,
+  GAME_501 = 501
+}
+
+enum TurnStatus {
+  VALID = "valid",
+  BUST = "bust",
+  WIN = "win"
+}
+
+// ============================================
+// INTERFACES & TYPES
+// ============================================
 interface Turn {
   turnNumber: number;
   playerId: number;
@@ -17,18 +34,282 @@ interface Player {
   turnHistory: Turn[];
 }
 
-// Game state varaibles 
-let players: Player[] = [];
-let currentPlayerIndex: number = 0;
-let startScore: 301 | 501 = 501;
-let maxLegs: number = 5; 
-let currentLeg: number = 1;
-let gameOver: boolean = false;
-let legTurnHistory: Turn[] = [];
-let globalTurnNumber: number = 0;
-let lastBustPlayerId: number | null = null;
+interface GameConfig {
+  gameType: GameType;
+  maxLegs: number;
+  playerNames: string[];
+}
 
-// Function to show the setup screen
+// Generic utility type for event handlers
+type EventHandler<T> = (data: T) => void;
+
+// ============================================
+// GAME STATE MANAGEMENT MODULE
+// ============================================
+class GameState {
+  players: Player[] = [];
+  currentPlayerIndex: number = 0;
+  startScore: GameType = GameType.GAME_501;
+  maxLegs: number = 5;
+  currentLeg: number = 1;
+  gameOver: boolean = false;
+  legTurnHistory: Turn[] = [];
+  globalTurnNumber: number = 0;
+  lastBustPlayerId: number | null = null;
+
+  reset(config: GameConfig): void {
+    this.startScore = config.gameType;
+    this.maxLegs = config.maxLegs;
+    this.currentLeg = 1;
+    this.currentPlayerIndex = 0;
+    this.gameOver = false;
+
+    this.players = config.playerNames.map((name, index) => ({
+      id: index,
+      name,
+      score: this.startScore,
+      legsWon: 0,
+      totalPoints: 0,
+      turns: 0,
+      turnHistory: []
+    }));
+
+    this.legTurnHistory = [];
+    this.globalTurnNumber = 0;
+    this.lastBustPlayerId = null;
+  }
+
+  getCurrentPlayer(): Player | null {
+    return this.players[this.currentPlayerIndex] || null;
+  }
+
+  nextPlayer(): void {
+    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+  }
+
+  getLegsNeededToWin(): number {
+    return Math.ceil(this.maxLegs / 2);
+  }
+
+  hasWonSet(player: Player): boolean {
+    return player.legsWon >= this.getLegsNeededToWin();
+  }
+}
+
+// ============================================
+// GAME LOGIC MODULE
+// ============================================
+class GameLogic {
+  constructor(private state: GameState) {}
+
+  recordTurn(points: number): void {
+    if (this.state.gameOver) return;
+
+    const player = this.state.getCurrentPlayer();
+    if (!player) return;
+
+    const newScore = player.score - points;
+    this.state.globalTurnNumber++;
+
+    const isBust = newScore < 0;
+    const turn: Turn = {
+      turnNumber: this.state.globalTurnNumber,
+      playerId: player.id,
+      playerName: player.name,
+      pointsScored: isBust ? 0 : points,
+      remainingScore: isBust ? player.score : newScore,
+      isBust: isBust
+    };
+
+    this.state.legTurnHistory.push(turn);
+    player.turnHistory.push(turn);
+
+    if (isBust) {
+      if (
+        this.state.lastBustPlayerId !== null &&
+        this.state.lastBustPlayerId !== player.id
+      ) {
+        renderState();
+        setTimeout(() => {
+          alert(
+            `Both players busted!\n\nResetting Leg ${this.state.currentLeg}...`
+          );
+          this.resetCurrentLegAuto();
+        }, 100);
+        return;
+      }
+      this.state.lastBustPlayerId = player.id;
+      this.state.nextPlayer();
+      renderState();
+      return;
+    }
+
+    this.state.lastBustPlayerId = null;
+    player.score = newScore;
+    player.totalPoints += points;
+    player.turns++;
+
+    if (newScore === 0) {
+      this.endLeg(player);
+      return;
+    }
+
+    this.state.nextPlayer();
+    renderState();
+  }
+
+  removeTurn(turnNumber: number): void {
+    if (this.state.gameOver) return;
+
+    const turnIndex = this.state.legTurnHistory.findIndex(
+      (t) => t.turnNumber === turnNumber
+    );
+    if (turnIndex === -1) return;
+
+    const turn = this.state.legTurnHistory[turnIndex];
+    this.state.legTurnHistory.splice(turnIndex, 1);
+
+    const player = this.state.players.find((p) => p.id === turn.playerId);
+    if (player) {
+      const playerTurnIndex = player.turnHistory.findIndex(
+        (t) => t.turnNumber === turnNumber
+      );
+      if (playerTurnIndex !== -1) {
+        player.turnHistory.splice(playerTurnIndex, 1);
+      }
+    }
+
+    this.recalculateScores();
+    renderState();
+  }
+
+  modifyTurn(turnNumber: number): void {
+    if (this.state.gameOver) return;
+
+    const turn = this.state.legTurnHistory.find((t) => t.turnNumber === turnNumber);
+    if (!turn) return;
+
+    const newPoints = prompt(
+      `Modify points for ${turn.playerName} (Turn ${turnNumber}):`,
+      turn.pointsScored.toString()
+    );
+    if (newPoints === null) return;
+
+    const points = parseInt(newPoints);
+    if (isNaN(points) || points < 0) {
+      alert("Invalid points value");
+      return;
+    }
+
+    turn.pointsScored = points;
+    this.recalculateScores();
+    renderState();
+  }
+
+  private recalculateScores(): void {
+    this.state.players.forEach((player) => {
+      player.score = this.state.startScore;
+      player.totalPoints = 0;
+      player.turns = 0;
+    });
+
+    let winningPlayer: Player | null = null;
+
+    for (const turn of this.state.legTurnHistory) {
+      const player = this.state.players.find((p) => p.id === turn.playerId);
+      if (!player) continue;
+
+      const newScore = player.score - turn.pointsScored;
+
+      if (newScore < 0) {
+        turn.isBust = true;
+        turn.remainingScore = player.score;
+        turn.pointsScored = 0;
+      } else if (newScore === 0) {
+        player.score = newScore;
+        player.totalPoints += turn.pointsScored;
+        player.turns++;
+        turn.remainingScore = newScore;
+        turn.isBust = false;
+        winningPlayer = player;
+        break;
+      } else {
+        player.score = newScore;
+        player.totalPoints += turn.pointsScored;
+        player.turns++;
+        turn.remainingScore = newScore;
+        turn.isBust = false;
+      }
+    }
+
+    if (winningPlayer) {
+      alert(
+        `${winningPlayer.name} reached exactly zero and wins Leg ${this.state.currentLeg}!`
+      );
+    }
+  }
+
+  private endLeg(winner: Player): void {
+    winner.legsWon++;
+
+    if (this.state.hasWonSet(winner)) {
+      renderState();
+      setTimeout(() => {
+        this.declareWinner(winner);
+      }, 200);
+    } else {
+      renderState();
+      setTimeout(() => {
+        alert(
+          `🎯 ${winner.name} wins Leg ${this.state.currentLeg}!\n\n${winner.name} has won ${winner.legsWon} leg(s)!\n\nStarting Leg ${this.state.currentLeg + 1}...`
+        );
+        this.resetLegScores();
+      }, 200);
+    }
+  }
+
+  private resetLegScores(): void {
+    this.state.currentLeg++;
+
+    this.state.players.forEach((player) => {
+      player.score = this.state.startScore;
+      player.turnHistory = [];
+    });
+
+    this.state.legTurnHistory = [];
+    this.state.globalTurnNumber = 0;
+    this.state.currentPlayerIndex = 0;
+    this.state.lastBustPlayerId = null;
+
+    renderState();
+  }
+
+  private resetCurrentLegAuto(): void {
+    if (this.state.gameOver) return;
+
+    this.state.players.forEach((player) => {
+      player.score = this.state.startScore;
+      player.turnHistory = [];
+    });
+
+    this.state.legTurnHistory = [];
+    this.state.globalTurnNumber = 0;
+    this.state.currentPlayerIndex = 0;
+    this.state.lastBustPlayerId = null;
+
+    renderState();
+  }
+
+  private declareWinner(winner: Player): void {
+    this.state.gameOver = true;
+    alert(`${winner.name} wins the set!`);
+    renderState();
+  }
+}
+
+// ============================================
+// UI MODULE
+// ============================================
 function showSetup(): void {
   const gameDiv = document.getElementById("game");
   if (!gameDiv) return;
@@ -39,17 +320,31 @@ function showSetup(): void {
       <form id="setupForm" class="setup-form">
         <div class="form-group">
           <label for="player1">Player 1 Name:</label>
-          <input type="text" id="player1" value="Player 1" required />
+          <input
+            type="text"
+            id="player1"
+            value="Player 1"
+            required
+            aria-label="Player 1 Name"
+            aria-required="true"
+          />
         </div>
         
         <div class="form-group">
           <label for="player2">Player 2 Name:</label>
-          <input type="text" id="player2" value="Player 2" required />
+          <input
+            type="text"
+            id="player2"
+            value="Player 2"
+            required
+            aria-label="Player 2 Name"
+            aria-required="true"
+          />
         </div>
         
         <div class="form-group">
           <label for="gameType">Game Type:</label>
-          <select id="gameType" required>
+          <select id="gameType" required aria-label="Select game type">
             <option value="501">501</option>
             <option value="301">301</option>
           </select>
@@ -57,7 +352,7 @@ function showSetup(): void {
         
         <div class="form-group">
           <label for="setSize">Set Size (Best of):</label>
-          <select id="setSize" required>
+          <select id="setSize" required aria-label="Select set size">
             <option value="1">1 Leg</option>
             <option value="3">3 Legs</option>
             <option value="5" selected>5 Legs</option>
@@ -66,342 +361,144 @@ function showSetup(): void {
           </select>
         </div>
         
-        <button type="submit" class="btn-start">Start Game</button>
+        <button type="submit" class="btn-start" aria-label="Start the game">
+          Start Game
+        </button>
       </form>
     </div>
   `;
 
   const form = document.getElementById("setupForm") as HTMLFormElement;
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", (e: SubmitEvent) => {
     e.preventDefault();
-    
+
     const player1 = (document.getElementById("player1") as HTMLInputElement).value.trim();
     const player2 = (document.getElementById("player2") as HTMLInputElement).value.trim();
-    const gameType = parseInt((document.getElementById("gameType") as HTMLSelectElement).value) as 301 | 501;
-    const setSize = parseInt((document.getElementById("setSize") as HTMLSelectElement).value);
-    
+    const gameType = parseInt(
+      (document.getElementById("gameType") as HTMLSelectElement).value
+    ) as 301 | 501;
+    const setSize = parseInt(
+      (document.getElementById("setSize") as HTMLSelectElement).value
+    );
+
     if (!player1 || !player2) {
       alert("Please enter names for both players");
       return;
     }
-    
+
     startGame([player1, player2], gameType, setSize);
   });
 }
-(window as Window & { showSetup: typeof showSetup }).showSetup = showSetup;
 
-// Function to start a new game
-function startGame(
-  playerNames: string[],
-  startingScore: 301 | 501,
-  legsToWin: number
-): void {
-  startScore = startingScore;
-  maxLegs = legsToWin;
-  currentLeg = 1;
-  currentPlayerIndex = 0;
-  gameOver = false;
+let gameState: GameState;
+let gameLogic: GameLogic;
 
-  players = playerNames.map((name, index) => ({
-    id: index,
-    name,
-    score: startScore,
-    legsWon: 0,
-    totalPoints: 0,
-    turns: 0,
-    turnHistory: []
-  }));
-
-  legTurnHistory = [];
-  globalTurnNumber = 0;
-  renderState();
-}
-
-// Function to record a player's turn
-function recordTurn(points: number): void {
-  if (gameOver) return;
-
-  const player = players[currentPlayerIndex];
-  const newScore = player.score - points;
-  globalTurnNumber++;
-
-  const isBust = newScore < 0;
-  const turn: Turn = {
-    turnNumber: globalTurnNumber,
-    playerId: player.id,
-    playerName: player.name,
-    pointsScored: isBust ? 0 : points,
-    remainingScore: isBust ? player.score : newScore,
-    isBust: isBust
+function startGame(playerNames: string[], gameType: 301 | 501, setSize: number): void {
+  gameState = new GameState();
+  const config: GameConfig = {
+    gameType: gameType as GameType,
+    maxLegs: setSize,
+    playerNames
   };
-
-  legTurnHistory.push(turn);
-  player.turnHistory.push(turn);
-
-  if (isBust) {
-    // Check if both players busted consecutively
-    if (lastBustPlayerId !== null && lastBustPlayerId !== player.id) {
-      // Both players have now busted - reset the leg
-      renderState();
-      setTimeout(() => {
-        alert(`Both players busted!\n\nResetting Leg ${currentLeg}...`);
-        resetCurrentLegAuto();
-      }, 100);
-      return;
-    }
-    lastBustPlayerId = player.id;
-    nextPlayer();
-    renderState();
-    return;
-  }
-
-  // Clear bust tracking on successful score
-  lastBustPlayerId = null;
-  
-  player.score = newScore;
-  player.totalPoints += points;
-  player.turns++;
-
-  if (newScore === 0) {
-    // Player reached exactly zero - they win this leg!
-    endLeg(player);
-    return;
-  }
-
-  nextPlayer();
+  gameState.reset(config);
+  gameLogic = new GameLogic(gameState);
   renderState();
 }
-(window as Window & { recordTurn: typeof recordTurn }).recordTurn = recordTurn;
 
-// Function to remove a turn from history
+function recordTurn(points: number): void {
+  gameLogic?.recordTurn(points);
+}
+
 function removeTurn(turnNumber: number): void {
-  if (gameOver) return;
-  
-  const turnIndex = legTurnHistory.findIndex(t => t.turnNumber === turnNumber);
-  if (turnIndex === -1) return;
-  
-  const turn = legTurnHistory[turnIndex];
-  
-  // Remove from leg history
-  legTurnHistory.splice(turnIndex, 1);
-  
-  // Remove from player's history
-  const player = players.find(p => p.id === turn.playerId);
-  if (player) {
-    const playerTurnIndex = player.turnHistory.findIndex(t => t.turnNumber === turnNumber);
-    if (playerTurnIndex !== -1) {
-      player.turnHistory.splice(playerTurnIndex, 1);
-    }
-  }
-  
-  // Recalculate scores by replaying all remaining turns
-  recalculateScores();
-  renderState();
+  gameLogic?.removeTurn(turnNumber);
 }
-(window as Window & { removeTurn: typeof removeTurn }).removeTurn = removeTurn;
 
-// Function to modify a turn's points
 function modifyTurn(turnNumber: number): void {
-  if (gameOver) return;
-  
-  const turn = legTurnHistory.find(t => t.turnNumber === turnNumber);
-  if (!turn) return;
-  
-  const newPoints = prompt(`Modify points for ${turn.playerName} (Turn ${turnNumber}):`, turn.pointsScored.toString());
-  if (newPoints === null) return;
-  
-  const points = parseInt(newPoints);
-  if (isNaN(points) || points < 0) {
-    alert('Invalid points value');
-    return;
-  }
-  
-  turn.pointsScored = points;
-  recalculateScores();
-  renderState();
-}
-(window as Window & { modifyTurn: typeof modifyTurn }).modifyTurn = modifyTurn;
-
-// Function to recalculate all player scores based on turn history
-function recalculateScores(): void {
-  // Reset all players to start score
-  players.forEach(player => {
-    player.score = startScore;
-    player.totalPoints = 0;
-    player.turns = 0;
-  });
-  
-  let winningPlayer: Player | null = null;
-  
- 
-  for (const turn of legTurnHistory) {
-    const player = players.find(p => p.id === turn.playerId);
-    if (!player) continue;
-    
-    const newScore = player.score - turn.pointsScored;
-    console.log(player.score, turn.pointsScored, newScore)
-    if (newScore < 0) {
-      // Bust - score goes below zero
-      turn.isBust = true;
-      turn.remainingScore = player.score;
-      turn.pointsScored = 0;
-    } else if (newScore === 0) {
-      // Exactly zero - player wins this leg!
-      player.score = newScore;
-      player.totalPoints += turn.pointsScored;
-      player.turns++;
-      turn.remainingScore = newScore;
-      turn.isBust = false;
-      winningPlayer = player;
-      break; // Stop processing turns after a win
-    } else {
-      // Valid score
-      player.score = newScore;
-      player.totalPoints += turn.pointsScored;
-      player.turns++;
-      turn.remainingScore = newScore;
-      turn.isBust = false;
-    }
-  }
-  
-  // If someone reached exactly zero, they win the leg
-  if (winningPlayer) {
-    alert(`${winningPlayer.name} reached exactly zero and wins Leg ${currentLeg}!`);
-  }
-}
-
-// Function to swtich to the next player 
-function nextPlayer(): void {
-currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-}
-function endLeg(winner: Player): void {
-  winner.legsWon++;
-  
-  if (hasWonSet(winner)) {
-    // Update display to show final legs won
-    renderState();
-    setTimeout(() => {
-      declareWinner(winner);
-    }, 200);
-  } else {
-    // Update display immediately to show legs won
-    renderState();
-    
-    // Force browser to update the DOM before showing alert
-    setTimeout(() => {
-      alert(`🎯 ${winner.name} wins Leg ${currentLeg}!\n\n${winner.name} has won ${winner.legsWon} leg(s)!\n\nStarting Leg ${currentLeg + 1}...`);
-      resetLegScores();
-    }, 200);
-  }
-}
-
-
-function resetLegScores(): void {
-  // Increment leg counter FIRST
-  currentLeg++;
-  
-  // Reset all player scores and history
-  players.forEach(player => {
-    player.score = startScore;
-    player.turnHistory = [];
-  });
-
-  legTurnHistory = [];
-  globalTurnNumber = 0;
-  currentPlayerIndex = 0;
-  lastBustPlayerId = null;
-
-  renderState();
-}
-
-// Function to reset the current leg automatically (without incrementing leg counter)
-function resetCurrentLegAuto(): void {
-  if (gameOver) return;
-  
-  // Reset all player scores and history
-  players.forEach(player => {
-    player.score = startScore;
-    player.turnHistory = [];
-  });
-
-  legTurnHistory = [];
-  globalTurnNumber = 0;
-  currentPlayerIndex = 0;
-  lastBustPlayerId = null;
-
-  renderState();
-}
-function hasWonSet(player: Player): boolean {
-const legsNeededToWin = Math.ceil(maxLegs / 2);
-return player.legsWon >= legsNeededToWin;
-}
-
-
-function declareWinner(winner: Player): void {
-gameOver = true;
-alert(`${winner.name} wins the set!`);
-renderState();
+  gameLogic?.modifyTurn(turnNumber);
 }
 
 function renderState(): void {
   const gameDiv = document.getElementById("game");
   if (!gameDiv) return;
 
-  const turnHistoryTable = legTurnHistory.length > 0 ? `
+  const turnHistoryTable =
+    gameState.legTurnHistory.length > 0
+      ? `
     <h3>Turn History</h3>
-    <table>
+    <table role="grid" aria-label="Turn history">
       <thead>
         <tr>
-          <th>Turn #</th>
-          <th>Player</th>
-          <th>Points</th>
-          <th>Remaining</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <th scope="col">Turn #</th>
+          <th scope="col">Player</th>
+          <th scope="col">Points</th>
+          <th scope="col">Remaining</th>
+          <th scope="col">Status</th>
+          <th scope="col">Actions</th>
         </tr>
       </thead>
       <tbody>
-        ${legTurnHistory.map(turn => `
-          <tr class="${turn.isBust ? 'bust' : ''}">
+        ${gameState.legTurnHistory
+          .map(
+            (turn) => `
+          <tr class="${turn.isBust ? "bust" : ""}" role="row">
             <td>${turn.turnNumber}</td>
             <td>${turn.playerName}</td>
             <td>${turn.pointsScored}</td>
             <td>${turn.remainingScore}</td>
-            <td>${turn.isBust ? '❌ BUST' : turn.remainingScore === 0 ? '🎯 WIN' : '✓'}</td>
+            <td>${turn.isBust ? "❌ BUST" : turn.remainingScore === 0 ? "🎯 WIN" : "✓"}</td>
             <td class="actions">
-              <button class="btn-small" onclick="modifyTurn(${turn.turnNumber})">Edit</button>
-              <button class="btn-small btn-danger" onclick="removeTurn(${turn.turnNumber})">Delete</button>
+              <button
+                class="btn-small"
+                onclick="modifyTurn(${turn.turnNumber})"
+                aria-label="Edit turn ${turn.turnNumber} for ${turn.playerName}"
+              >
+                Edit
+              </button>
+              <button
+                class="btn-small btn-danger"
+                onclick="removeTurn(${turn.turnNumber})"
+                aria-label="Delete turn ${turn.turnNumber} for ${turn.playerName}"
+              >
+                Delete
+              </button>
             </td>
           </tr>
-        `).join('')}
+        `
+          )
+          .join("")}
       </tbody>
     </table>
-  ` : '';
+  `
+      : "";
 
-  const legsNeededToWin = Math.ceil(maxLegs / 2);
+  const legsNeededToWin = gameState.getLegsNeededToWin();
   const setStatusTable = `
-    <div class="set-status">
-      <h3>Set Status (Best of ${maxLegs})</h3>
-      <table class="set-table">
+    <div class="set-status" role="region" aria-label="Set status">
+      <h3>Set Status (Best of ${gameState.maxLegs})</h3>
+      <table role="grid" aria-label="Player legs won">
         <thead>
           <tr>
-            <th>Player</th>
-            <th>Legs Won</th>
-            <th>Progress</th>
+            <th scope="col">Player</th>
+            <th scope="col">Legs Won</th>
+            <th scope="col">Progress</th>
           </tr>
         </thead>
         <tbody>
-          ${players.map(player => `
-            <tr class="${player.legsWon >= legsNeededToWin ? 'winner' : ''}">
+          ${gameState.players
+            .map(
+              (player) => `
+            <tr class="${player.legsWon >= legsNeededToWin ? "winner" : ""}" role="row">
               <td><strong>${player.name}</strong></td>
               <td>${player.legsWon} / ${legsNeededToWin}</td>
               <td>
-                <div class="progress-bar">
+                <div class="progress-bar" role="progressbar" aria-valuenow="${player.legsWon}" aria-valuemin="0" aria-valuemax="${legsNeededToWin}">
                   <div class="progress-fill" style="width: ${(player.legsWon / legsNeededToWin) * 100}%"></div>
                 </div>
               </td>
             </tr>
-          `).join('')}
+          `
+            )
+            .join("")}
         </tbody>
       </table>
     </div>
@@ -409,27 +506,80 @@ function renderState(): void {
 
   gameDiv.innerHTML = `
     ${setStatusTable}
-    <h2>Leg ${currentLeg} - Current Scores</h2>
-    <ul>
-      ${players
+    <h2>Leg ${gameState.currentLeg} - Current Scores</h2>
+    <ul role="list">
+      ${gameState.players
         .map(
           (player, index) => `
-            <li>
+            <li role="listitem">
               <strong>${player.name}</strong> — Score: ${player.score}
-              ${index === currentPlayerIndex && !gameOver ? " ← current" : ""}
+              ${
+                index === gameState.currentPlayerIndex && !gameState.gameOver
+                  ? `<span aria-live="polite"> ← current player</span>`
+                  : ""
+              }
             </li>
           `
         )
         .join("")}
     </ul>
     <div class="button-container">
-      <button onclick="recordTurn(60)">Score 60</button>
-      <button onclick="recordTurn(100)">Score 100</button>
-      <button onclick="recordTurn(140)">Score 140</button>
+      <button
+        onclick="recordTurn(60)"
+        aria-label="Record 60 points for current player"
+      >
+        Score 60
+      </button>
+      <button
+        onclick="recordTurn(100)"
+        aria-label="Record 100 points for current player"
+      >
+        Score 100
+      </button>
+      <button
+        onclick="recordTurn(140)"
+        aria-label="Record 140 points for current player"
+      >
+        Score 140
+      </button>
     </div>
     ${turnHistoryTable}
   `;
 }
+
+// Expose functions to window for HTML onclick handlers
+(
+  window as Window & {
+    showSetup: typeof showSetup;
+    recordTurn: typeof recordTurn;
+    removeTurn: typeof removeTurn;
+    modifyTurn: typeof modifyTurn;
+  }
+).showSetup = showSetup;
+(
+  window as Window & {
+    showSetup: typeof showSetup;
+    recordTurn: typeof recordTurn;
+    removeTurn: typeof removeTurn;
+    modifyTurn: typeof modifyTurn;
+  }
+).recordTurn = recordTurn;
+(
+  window as Window & {
+    showSetup: typeof showSetup;
+    recordTurn: typeof recordTurn;
+    removeTurn: typeof removeTurn;
+    modifyTurn: typeof modifyTurn;
+  }
+).removeTurn = removeTurn;
+(
+  window as Window & {
+    showSetup: typeof showSetup;
+    recordTurn: typeof recordTurn;
+    removeTurn: typeof removeTurn;
+    modifyTurn: typeof modifyTurn;
+  }
+).modifyTurn = modifyTurn;
 
 // Show setup screen on page load
 showSetup();
