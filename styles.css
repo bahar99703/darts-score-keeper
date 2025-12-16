@@ -78,6 +78,49 @@ li span {
   font-size: 0.85rem;
 }
 
+/* Turn history table */
+h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #fbbf24;
+  font-size: 1.1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  background: #1f2937;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+thead {
+  background: #374151;
+}
+
+th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #fbbf24;
+  font-size: 0.9rem;
+}
+
+td {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid #374151;
+}
+
+tr.bust {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+tbody tr:hover:not(.bust) {
+  background: #2d3748;
+}
+
 /* Responsive: relax centering on very small screens */
 @media (max-width: 480px) {
   body {
