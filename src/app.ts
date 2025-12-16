@@ -86,6 +86,8 @@ function recordTurn(points: number): void {
   player.turns++;
 
   if (newScore === 0) {
+    // Player reached exactly zero - they win this leg!
+    alert(`🎯 ${player.name} reached exactly zero and wins Leg ${currentLeg}!`);
     endLeg(player);
     return;
   }
@@ -153,25 +155,43 @@ function recalculateScores(): void {
     player.turns = 0;
   });
   
+  let winningPlayer: Player | null = null;
+  
   // Replay all turns
-  legTurnHistory.forEach(turn => {
+  for (const turn of legTurnHistory) {
     const player = players.find(p => p.id === turn.playerId);
-    if (!player) return;
+    if (!player) continue;
     
     const newScore = player.score - turn.pointsScored;
     
-    if (newScore >= 0) {
+    if (newScore < 0) {
+      // Bust - score goes below zero
+      turn.isBust = true;
+      turn.remainingScore = player.score;
+      turn.pointsScored = 0;
+    } else if (newScore === 0) {
+      // Exactly zero - player wins this leg!
       player.score = newScore;
       player.totalPoints += turn.pointsScored;
       player.turns++;
       turn.remainingScore = newScore;
       turn.isBust = false;
+      winningPlayer = player;
+      break; // Stop processing turns after a win
     } else {
-      turn.isBust = true;
-      turn.remainingScore = player.score;
-      turn.pointsScored = 0;
+      // Valid score
+      player.score = newScore;
+      player.totalPoints += turn.pointsScored;
+      player.turns++;
+      turn.remainingScore = newScore;
+      turn.isBust = false;
     }
-  });
+  }
+  
+  // If someone reached exactly zero, they win the leg
+  if (winningPlayer) {
+    alert(`${winningPlayer.name} reached exactly zero and wins Leg ${currentLeg}!`);
+  }
 }
 
 // Function to swtich to the next player 
@@ -250,14 +270,44 @@ function renderState(): void {
     </table>
   ` : '';
 
+  const legsNeededToWin = Math.ceil(maxLegs / 2);
+  const setStatusTable = `
+    <div class="set-status">
+      <h3>Set Status (Best of ${maxLegs})</h3>
+      <table class="set-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Legs Won</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${players.map(player => `
+            <tr class="${player.legsWon >= legsNeededToWin ? 'winner' : ''}">
+              <td><strong>${player.name}</strong></td>
+              <td>${player.legsWon} / ${legsNeededToWin}</td>
+              <td>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${(player.legsWon / legsNeededToWin) * 100}%"></div>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
   gameDiv.innerHTML = `
-    <h2>Leg ${currentLeg}</h2>
+    ${setStatusTable}
+    <h2>Leg ${currentLeg} - Current Scores</h2>
     <ul>
       ${players
         .map(
           (player, index) => `
             <li>
-              <strong>${player.name}</strong> — Score: ${player.score}, Legs Won: ${player.legsWon}
+              <strong>${player.name}</strong> — Score: ${player.score}
               ${index === currentPlayerIndex && !gameOver ? " ← current" : ""}
             </li>
           `

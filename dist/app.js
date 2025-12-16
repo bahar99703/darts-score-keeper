@@ -55,6 +55,8 @@ function recordTurn(points) {
     player.totalPoints += points;
     player.turns++;
     if (newScore === 0) {
+        // Player reached exactly zero - they win this leg!
+        alert(`🎯 ${player.name} reached exactly zero and wins Leg ${currentLeg}!`);
         endLeg(player);
         return;
     }
@@ -113,25 +115,42 @@ function recalculateScores() {
         player.totalPoints = 0;
         player.turns = 0;
     });
+    let winningPlayer = null;
     // Replay all turns
-    legTurnHistory.forEach(turn => {
+    for (const turn of legTurnHistory) {
         const player = players.find(p => p.id === turn.playerId);
         if (!player)
-            return;
+            continue;
         const newScore = player.score - turn.pointsScored;
-        if (newScore >= 0) {
+        if (newScore < 0) {
+            // Bust - score goes below zero
+            turn.isBust = true;
+            turn.remainingScore = player.score;
+            turn.pointsScored = 0;
+        }
+        else if (newScore === 0) {
+            // Exactly zero - player wins this leg!
+            player.score = newScore;
+            player.totalPoints += turn.pointsScored;
+            player.turns++;
+            turn.remainingScore = newScore;
+            turn.isBust = false;
+            winningPlayer = player;
+            break; // Stop processing turns after a win
+        }
+        else {
+            // Valid score
             player.score = newScore;
             player.totalPoints += turn.pointsScored;
             player.turns++;
             turn.remainingScore = newScore;
             turn.isBust = false;
         }
-        else {
-            turn.isBust = true;
-            turn.remainingScore = player.score;
-            turn.pointsScored = 0;
-        }
-    });
+    }
+    // If someone reached exactly zero, they win the leg
+    if (winningPlayer) {
+        alert(`${winningPlayer.name} reached exactly zero and wins Leg ${currentLeg}!`);
+    }
 }
 // Function to swtich to the next player 
 function nextPlayer() {
