@@ -26,6 +26,7 @@ let currentLeg: number = 1;
 let gameOver: boolean = false;
 let legTurnHistory: Turn[] = [];
 let globalTurnNumber: number = 0;
+let lastBustPlayerId: number | null = null;
 
 // Function to show the setup screen
 function showSetup(): void {
@@ -138,11 +139,25 @@ function recordTurn(points: number): void {
   player.turnHistory.push(turn);
 
   if (isBust) {
+    // Check if both players busted consecutively
+    if (lastBustPlayerId !== null && lastBustPlayerId !== player.id) {
+      // Both players have now busted - reset the leg
+      renderState();
+      setTimeout(() => {
+        alert(`Both players busted!\n\nResetting Leg ${currentLeg}...`);
+        resetCurrentLegAuto();
+      }, 100);
+      return;
+    }
+    lastBustPlayerId = player.id;
     nextPlayer();
     renderState();
     return;
   }
 
+  // Clear bust tracking on successful score
+  lastBustPlayerId = null;
+  
   player.score = newScore;
   player.totalPoints += points;
   player.turns++;
@@ -281,7 +296,7 @@ function resetLegScores(): void {
   // Increment leg counter FIRST
   currentLeg++;
   
-
+  // Reset all player scores and history
   players.forEach(player => {
     player.score = startScore;
     player.turnHistory = [];
@@ -289,7 +304,26 @@ function resetLegScores(): void {
 
   legTurnHistory = [];
   globalTurnNumber = 0;
-  currentPlayerIndex = 0; 
+  currentPlayerIndex = 0;
+  lastBustPlayerId = null;
+
+  renderState();
+}
+
+// Function to reset the current leg automatically (without incrementing leg counter)
+function resetCurrentLegAuto(): void {
+  if (gameOver) return;
+  
+  // Reset all player scores and history
+  players.forEach(player => {
+    player.score = startScore;
+    player.turnHistory = [];
+  });
+
+  legTurnHistory = [];
+  globalTurnNumber = 0;
+  currentPlayerIndex = 0;
+  lastBustPlayerId = null;
 
   renderState();
 }
@@ -384,9 +418,11 @@ function renderState(): void {
         )
         .join("")}
     </ul>
-    <button onclick="recordTurn(60)">Score 60</button>
-    <button onclick="recordTurn(100)">Score 100</button>
-    <button onclick="recordTurn(140)">Score 140</button>
+    <div class="button-container">
+      <button onclick="recordTurn(60)">Score 60</button>
+      <button onclick="recordTurn(100)">Score 100</button>
+      <button onclick="recordTurn(140)">Score 140</button>
+    </div>
     ${turnHistoryTable}
   `;
 }
