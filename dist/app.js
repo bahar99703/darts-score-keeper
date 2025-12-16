@@ -233,16 +233,16 @@ function endLeg(winner) {
         renderState();
         setTimeout(() => {
             declareWinner(winner);
-        }, 100);
+        }, 200);
     }
     else {
-        // Update display to show legs won before moving to next leg
+        // Update display immediately to show legs won
         renderState();
-        // Show leg win message
+        // Force browser to update the DOM before showing alert
         setTimeout(() => {
-            alert(`🎯 ${winner.name} wins Leg ${currentLeg}!\n\nLegs Won: ${winner.legsWon}\n\nStarting Leg ${currentLeg + 1}...`);
+            alert(`🎯 ${winner.name} wins Leg ${currentLeg}!\n\n${winner.name} has won ${winner.legsWon} leg(s)!\n\nStarting Leg ${currentLeg + 1}...`);
             resetLegScores();
-        }, 100);
+        }, 200);
     }
 }
 function resetLegScores() {
