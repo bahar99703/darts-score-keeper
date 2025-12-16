@@ -121,6 +121,26 @@ tbody tr:hover:not(.bust) {
   background: #2d3748;
 }
 
+td.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+}
+
+.btn-danger {
+  background: #dc2626;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
 /* Responsive: relax centering on very small screens */
 @media (max-width: 480px) {
   body {

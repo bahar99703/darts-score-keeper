@@ -94,6 +94,86 @@ function recordTurn(points: number): void {
   renderState();
 }
 (window as any).recordTurn = recordTurn;
+
+// Function to remove a turn from history
+function removeTurn(turnNumber: number): void {
+  if (gameOver) return;
+  
+  const turnIndex = legTurnHistory.findIndex(t => t.turnNumber === turnNumber);
+  if (turnIndex === -1) return;
+  
+  const turn = legTurnHistory[turnIndex];
+  
+  // Remove from leg history
+  legTurnHistory.splice(turnIndex, 1);
+  
+  // Remove from player's history
+  const player = players.find(p => p.id === turn.playerId);
+  if (player) {
+    const playerTurnIndex = player.turnHistory.findIndex(t => t.turnNumber === turnNumber);
+    if (playerTurnIndex !== -1) {
+      player.turnHistory.splice(playerTurnIndex, 1);
+    }
+  }
+  
+  // Recalculate scores by replaying all remaining turns
+  recalculateScores();
+  renderState();
+}
+(window as any).removeTurn = removeTurn;
+
+// Function to modify a turn's points
+function modifyTurn(turnNumber: number): void {
+  if (gameOver) return;
+  
+  const turn = legTurnHistory.find(t => t.turnNumber === turnNumber);
+  if (!turn) return;
+  
+  const newPoints = prompt(`Modify points for ${turn.playerName} (Turn ${turnNumber}):`, turn.pointsScored.toString());
+  if (newPoints === null) return;
+  
+  const points = parseInt(newPoints);
+  if (isNaN(points) || points < 0) {
+    alert('Invalid points value');
+    return;
+  }
+  
+  turn.pointsScored = points;
+  recalculateScores();
+  renderState();
+}
+(window as any).modifyTurn = modifyTurn;
+
+// Function to recalculate all player scores based on turn history
+function recalculateScores(): void {
+  // Reset all players to start score
+  players.forEach(player => {
+    player.score = startScore;
+    player.totalPoints = 0;
+    player.turns = 0;
+  });
+  
+  // Replay all turns
+  legTurnHistory.forEach(turn => {
+    const player = players.find(p => p.id === turn.playerId);
+    if (!player) return;
+    
+    const newScore = player.score - turn.pointsScored;
+    
+    if (newScore >= 0) {
+      player.score = newScore;
+      player.totalPoints += turn.pointsScored;
+      player.turns++;
+      turn.remainingScore = newScore;
+      turn.isBust = false;
+    } else {
+      turn.isBust = true;
+      turn.remainingScore = player.score;
+      turn.pointsScored = 0;
+    }
+  });
+}
+
 // Function to swtich to the next player 
 function nextPlayer(): void {
 currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
@@ -149,6 +229,7 @@ function renderState(): void {
           <th>Points</th>
           <th>Remaining</th>
           <th>Status</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -159,6 +240,10 @@ function renderState(): void {
             <td>${turn.pointsScored}</td>
             <td>${turn.remainingScore}</td>
             <td>${turn.isBust ? '❌ BUST' : turn.remainingScore === 0 ? '🎯 WIN' : '✓'}</td>
+            <td class="actions">
+              <button class="btn-small" onclick="modifyTurn(${turn.turnNumber})">Edit</button>
+              <button class="btn-small btn-danger" onclick="removeTurn(${turn.turnNumber})">Delete</button>
+            </td>
           </tr>
         `).join('')}
       </tbody>
